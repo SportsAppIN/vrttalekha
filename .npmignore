@@ -1,0 +1,15 @@
+support
+test
+examples
+.gitignore
+History.md
+bin/
+build/
+.idea/
+.vscode/
+node_modules/
+*.env
+.env.*
+__LOCAL__/
+temp/
+*-lock.json

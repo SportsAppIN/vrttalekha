@@ -1,0 +1,25 @@
+{
+  "name": "libloggerjs",
+  "version": "2021.09.01",
+  "description": "Logging client for SportsApp projects",
+  "main": "index.js",
+  "homepage": "https://github.com/SportsAppIN/libloggerjs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SportsAppIN/libloggerjs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SportsAppIN/libloggerjs/issues",
+    "email": "technology@sportsapp.co.in"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "@types/node": "^16.9.0"
+  },
+  "keywords": [],
+  "author": "Himanshu Nain",
+  "license": "ISC",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}
