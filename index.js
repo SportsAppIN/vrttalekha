@@ -197,64 +197,89 @@ class LoggerClient {
 }
 
 
-LoggerClient.Builder = function () {
+LoggerClient.Builder = class {
 
-	this.logSourceId = 'libloggerjs';
-	this.logSourceVersion = '0.0.0';
-	this.logSourceMode = 'debug';
-	this.defaultLogTag = 'libloggerjs';
-	this.minLogLevel = LogLevel.VERBOSE;
+	constructor() {
+		this._logSourceId = 'libloggerjs';
+		this._logSourceVersion = '0.0.0';
+		this._logSourceMode = 'debug';
+		this._defaultLogTag = 'libloggerjs';
+		this._minLogLevel = LogLevel.VERBOSE;
+	}
 
-	return {
-		/**
-		 *
-		 * @param {string} sourceId
-		 * @return {LoggerClient.Builder}
-		 */
-		setSourceId: (sourceId) => {
-			this.logSourceId = sourceId;
-			return this;
-		},
-		/**
-		 *
-		 * @param {string} sourceVersion
-		 * @return {LoggerClient.Builder}
-		 */
-		setSourceVersion: (sourceVersion) => {
-			this.logSourceVersion = sourceVersion;
-			return this;
-		},
-		/**
-		 *
-		 * @param {string} sourceMode
-		 * @return {LoggerClient.Builder}
-		 */
-		setSourceMode: (sourceMode) => {
-			this.logSourceMode = sourceMode;
-			return this;
-		},
-		/**
-		 *
-		 * @param {string} logTag
-		 * @return {LoggerClient.Builder}
-		 */
-		setDefaultLogTag: (logTag) => {
-			this.defaultLogTag = logTag;
-			return this;
-		},
-		/**
-		 *
-		 * @param {LogLevel.DEBUG|LogLevel.ERROR|LogLevel.INFO|LogLevel.WARN|LogLevel.VERBOSE} logLevel
-		 * @return {LoggerClient.Builder}
-		 */
-		setMinLogLevel: (logLevel) => {
-			this.minLogLevel = logLevel;
-			return this;
-		},
-		build: () => {
+	/**
+	 *
+	 * @param {string} sourceId
+	 * @return {LoggerClient.Builder}
+	 */
+	setLogSourceId(sourceId) {
+		if(typeof sourceId !== 'string')
+			throw new Error('logSourceId must be a string');
+		this._logSourceId = sourceId;
+		return this;
+	}
 
-		}
-	};
+	/**
+	 *
+	 * @param {string} sourceVersion
+	 * @return {LoggerClient.Builder}
+	 */
+	setLogSourceVersion(sourceVersion) {
+		if(typeof sourceVersion !== 'string')
+			throw new Error('sourceVersion must be a string');
+		this._logSourceVersion = sourceVersion;
+		return this;
+	}
+
+	/**
+	 *
+	 * @param {string} sourceMode
+	 * @return {LoggerClient.Builder}
+	 */
+	setLogSourceMode(sourceMode) {
+		if(typeof sourceMode !== 'string')
+			throw new Error('sourceMode must be a string');
+		this._logSourceMode = sourceMode;
+		return this;
+	}
+
+	/**
+	 *
+	 * @param {string} logTag
+	 * @return {LoggerClient.Builder}
+	 */
+	setDefaultLogTag(logTag) {
+		if(typeof logTag !== 'string')
+			throw new Error('logTag must be a string');
+		this._defaultLogTag = logTag;
+		return this;
+	}
+
+	/**
+	 * 
+	 * @param {LogLevelModel} minLogLevel
+	 * @return {LoggerClient.Builder}
+	 */
+	setMinLogLevel(minLogLevel) {
+		if (!(minLogLevel instanceof LogLevelModel))
+			throw new Error('minLogLevel must be an instance of LogLevelModel');
+		this._minLogLevel = minLogLevel;
+		return this;
+	}
+
+	/**
+	 *
+	 * @return {LoggerClient}
+	 */
+	build() {
+		return new LoggerClient(
+			this._logSourceId,
+			this._logSourceVersion,
+			this._logSourceMode,
+			this._defaultLogTag,
+			this._minLogLevel
+		);
+	}
 
 };
 
