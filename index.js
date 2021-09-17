@@ -259,5 +259,5 @@ LoggerClient.Builder = function () {
 };
 
 
-module.exports = LoggerClient;
-module.exports = LogLevel;
+module.exports.LoggerClient = LoggerClient;
+module.exports.LogLevel = LogLevel;
