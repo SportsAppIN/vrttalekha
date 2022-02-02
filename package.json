@@ -1,8 +1,7 @@
 {
-  "name": "@sportsappin/libloggerjs",
-  "version": "2021.9.2",
-  "description": "Logging client for SportsApp projects",
-  "main": "index.js",
+  "name": "@sportsappin/vrttalekha",
+  "version": "2022.2.1",
+  "description": "Logging client for SportsApp javascript projects",
   "homepage": "https://github.com/SportsAppIN/libloggerjs",
   "repository": {
     "type": "git",
@@ -10,10 +9,7 @@
   },
   "bugs": {
     "url": "https://github.com/SportsAppIN/libloggerjs/issues",
-    "email": "technology@sportsapp.co.in"
-  },
-  "dependencies": {
-    "mqtt": "^4.2.8"
+    "email": "engineering@sportsapp.co.in"
   },
   "devDependencies": {
     "eslint": "^7.32.0",

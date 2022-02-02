@@ -1,6 +1,6 @@
 'use strict';
 
-class LogLevelModel {
+class LogLevel {
 
 	/**
 	 *
@@ -30,14 +30,10 @@ class LogLevelModel {
 
 }
 
-module.exports.LogLevelModel = LogLevelModel;
+module.exports.LogLevel = LogLevel;
 
-module.exports.LogLevel = {
-
-	VERBOSE: new LogLevelModel('VERBOSE', 0),
-	DEBUG: new LogLevelModel('DEBUG', 1),
-	INFO: new LogLevelModel('INFO', 2),
-	WARN: new LogLevelModel('WARN', 3),
-	ERROR: new LogLevelModel('ERROR', 4),
-
-};
+module.exports.VERBOSE= new LogLevel('VERBOSE', 0);
+module.exports.DEBUG= new LogLevel('DEBUG', 1);
+module.exports.INFO= new LogLevel('INFO', 2);
+module.exports.WARN= new LogLevel('WARN', 3);
+module.exports.ERROR= new LogLevel('ERROR', 4);

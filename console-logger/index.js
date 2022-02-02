@@ -1,301 +1,188 @@
 'use strict';
 
-const {LogLevelModel, LogLevel} = require('../models/log-level');
+const EventEmitter = require('events');
+const {LogLevel, VERBOSE, DEBUG, ERROR, INFO, WARN} = require('../log-level');
 
-class ConsoleLogger {
+class ConsoleLogger extends EventEmitter {
 
 	/**
 	 *
-	 * @param {string} logSourceId
-	 * @param {string} logSourceVersion
-	 * @param {string} logSourceMode
-	 * @param {string} defaultLogTag
-	 * @param {LogLevelModel} minLogLevel
+	 * @param {string} _sourceId
+	 * @param {string} _sourceVersion
+	 * @param {string} _sourceMode
+	 * @param {LogLevel} _minLogLevel
 	 */
-	constructor(logSourceId, logSourceVersion, logSourceMode, defaultLogTag, minLogLevel) {
-
-		this._logSourceId = logSourceId;
-		this._logSourceVersion = logSourceVersion;
-		this._logSourceMode = logSourceMode;
-		this._defaultLogTag = defaultLogTag;
-		this._minLogLevel = minLogLevel;
+	constructor(_sourceId, _sourceVersion, _sourceMode, _minLogLevel) {
+		super();
+		this._sourceId = _sourceId;
+		this._sourceVersion = _sourceVersion;
+		this._sourceMode = _sourceMode;
+		this._minLogLevel = _minLogLevel;
 	}
 
 	/**
 	 *
-	 * @return {string}
-	 */
-	get logSourceId() {
-		return this._logSourceId;
-	}
-
-	/**
-	 *
-	 * @return {string}
-	 */
-	get logSourceVersion() {
-		return this._logSourceVersion;
-	}
-
-	/**
-	 *
-	 * @return {string}
-	 */
-	get logSourceMode() {
-		return this._logSourceMode;
-	}
-
-	/**
-	 *
-	 * @return {string}
-	 */
-	get defaultLogTag() {
-		return this._defaultLogTag;
-	}
-
-	/**
-	 *
-	 * @return {LogLevelModel}
-	 */
-	get minLogLevel() {
-		return this._minLogLevel;
-	}
-
-	/**
-	 *
-	 * @param {string} TAG
+	 * @param {string} tag
 	 * @param {string} message
-	 * @param {Error} [error]
+	 * @private
 	 */
-	v(TAG, message, error) {
-		this._sanitizeLog(
-			LogLevel.VERBOSE,
-			TAG,
-			message,
-			error,
-			(canPublishLogs, logLevel, TAG1, message1, error1) => {
-				if(canPublishLogs) {
-					this._printLog(logLevel, TAG1, message1, error1);
-				}
-			});
-	}
-
-	/**
-	 *
-	 * @param {string} TAG
-	 * @param {string} message
-	 * @param {Error} [error]
-	 */
-	d(TAG, message, error) {
-		this._sanitizeLog(
-			LogLevel.DEBUG,
-			TAG,
-			message,
-			error,
-			(canPublishLogs, logLevel, TAG1, message1, error1) => {
-				if(canPublishLogs) {
-					this._printLog(logLevel, TAG1, message1, error1);
-				}
-			});
-	}
-
-	/**
-	 *
-	 * @param {string} TAG
-	 * @param {string} message
-	 * @param {Error} [error]
-	 */
-	i(TAG, message, error) {
-		this._sanitizeLog(
-			LogLevel.INFO,
-			TAG,
-			message,
-			error,
-			(canPublishLogs, logLevel, TAG1, message1, error1) => {
-				if(canPublishLogs) {
-					this._printLog(logLevel, TAG1, message1, error1);
-				}
-			});
-	}
-
-	/**
-	 *
-	 * @param {string} TAG
-	 * @param {string} message
-	 * @param {Error} [error]
-	 */
-	w(TAG, message, error) {
-		this._sanitizeLog(
-			LogLevel.WARN,
-			TAG,
-			message,
-			error,
-			(canPublishLogs, logLevel, TAG1, message1, error1) => {
-				if(canPublishLogs) {
-					this._printLog(logLevel, TAG1, message1, error1);
-				}
-			});
-	}
-
-	/**
-	 *
-	 * @param {string} TAG
-	 * @param {string} message
-	 * @param {Error} [error]
-	 */
-	e(TAG, message, error) {
-		this._sanitizeLog(
-			LogLevel.ERROR,
-			TAG,
-			message,
-			error,
-			(canPublishLogs, logLevel, TAG1, message1, error1) => {
-				if(canPublishLogs) {
-					this._printLog(logLevel, TAG1, message1, error1);
-				}
-			});
-	}
-
-	/**
-	 *
-	 * @param {LogLevelModel} logLevel
-	 * @param {string} TAG
-	 * @param {string} message
-	 * @param {Error} error
-	 * @param { function(canPublishLogs:boolean, logLevel:LogLevelModel|null, TAG:string|null, message:string|null, error:string|null):void } callback
-	 *
-	 * @protected
-	 *
-	 */
-	_sanitizeLog(logLevel, TAG, message, error, callback) {
-
-		if(logLevel.priority < this._minLogLevel.priority) {
-			callback(false, null, null, null, null);
-			return;
-		}
-
-		if(typeof TAG !== 'string')
-			TAG = this._defaultLogTag;
-		else
-			TAG = TAG.toLowerCase();
-
+	_validate(tag, message) {
+		if(typeof tag !== 'string')
+			throw new Error('tag must be a string');
 		if(typeof message !== 'string')
-			message = JSON.stringify(message);
-
-		if(error instanceof Error)
-			error = `\nerrorMessage= ${error.message}\nerrorStack= ${error.stack}`;
-		else if(typeof error !== 'string')
-			error = JSON.stringify(error);
-		else
-			error = null;
-
-		callback(true, logLevel, TAG, message, error);
-
+			throw new Error('message must be a string');
 	}
 
 	/**
 	 *
-	 * @param {LogLevelModel} loglevel
-	 * @param {string} TAG
+	 * @param {LogLevel} logLevel
+	 * @param {string} tag
 	 * @param {string} message
-	 * @param {string} error
-	 *
-	 *
-	 * @protected
-	 *
+	 * @param {any} error
+	 * @return {{sourceId: string, logTag: string, logTimestamp: Date, sourceMode: string, logLevel: string, sourceVersion: string, logPriority: number, logMessage: string, error: any}}
+	 * @private
 	 */
-	_printLog(loglevel, TAG, message, error) {
+	_prepareLogObject(logLevel, tag, message, error) {
+		this._validate(tag, message);
 
-		switch (loglevel.priority) {
-
-		case 0:
-			console.log(`[${new Date().toISOString()}] / [${loglevel.name}] / [${TAG}]: ${message} <==ERROR==> ${error}`);
-			break;
-		case 1:
-			console.debug(`[${new Date().toISOString()}] / [${loglevel.name}] / [${TAG}]: ${message} <==ERROR==> ${error}`);
-			break;
-		case 2:
-			console.info(`[${new Date().toISOString()}] / [${loglevel.name}] / [${TAG}]: ${message} <==ERROR==> ${error}`);
-			break;
-		case 3:
-			console.warn(`[${new Date().toISOString()}] / [${loglevel.name}] / [${TAG}]: ${message} <==ERROR==> ${error}`);
-			break;
-		case 4:
-			console.error(`[${new Date().toISOString()}] / [${loglevel.name}] / [${TAG}]: ${message} <==ERROR==> ${error}`);
-			break;
-
+		try {
+			if(error === undefined || error === null)
+				error = null;
+			else if(error instanceof Error)
+				error = error.stack;
+			else
+				error = JSON.stringify(error);
+		} catch (_e) {
+			error = _e.stack;
 		}
 
+
+		return {
+			sourceId: this._sourceId,
+			sourceVersion: this._sourceVersion,
+			sourceMode: this._sourceMode,
+			logLevel: logLevel.name,
+			logPriority: logLevel.priority,
+			logTag: tag,
+			logMessage: message,
+			error: error,
+			logTimestamp: new Date()
+		};
+	}
+
+	/**
+	 *
+	 * @param {{sourceId: string, logTag: string, logTimestamp: Date, sourceMode: string, logLevel: string, sourceVersion: string, logPriority: number, logMessage: string, error: any}} logObject
+	 * @private
+	 */
+	_printLogObject(logObject) {
+		const str = `${logObject.logTimestamp.toISOString()} / [${logObject.logLevel}] / [${logObject.logTag}]: ${logObject.logMessage} /// ERROR /// ${logObject.error}`;
+		switch (logObject.logPriority) {
+		case 0: console.log(str); break;
+		case 1: console.debug(str); break;
+		case 2: console.info(str); break;
+		case 3: console.warn(str); break;
+		case 4: console.error(str); break;
+		default: break;
+		}
+		super.emit('log', logObject);
+	}
+
+	/**
+	 *
+	 * @param {string} tag
+	 * @param {string} message
+	 * @param {any} [error]
+	 */
+	v(tag, message, error) {
+		if(VERBOSE.priority < this._minLogLevel.priority) return;
+		this._printLogObject(this._prepareLogObject(VERBOSE, tag, message, error));
+	}
+
+	/**
+	 *
+	 * @param {string} tag
+	 * @param {string} message
+	 * @param {any} [error]
+	 */
+	d(tag, message, error) {
+		if(DEBUG.priority < this._minLogLevel.priority) return;
+		this._printLogObject(this._prepareLogObject(DEBUG, tag, message, error));
+	}
+
+	/**
+	 *
+	 * @param {string} tag
+	 * @param {string} message
+	 * @param {any} [error]
+	 */
+	i(tag, message, error) {
+		if(INFO.priority < this._minLogLevel.priority) return;
+		this._printLogObject(this._prepareLogObject(INFO, tag, message, error));
+	}
+
+	/**
+	 *
+	 * @param {string} tag
+	 * @param {string} message
+	 * @param {any} [error]
+	 */
+	w(tag, message, error) {
+		if(WARN.priority < this._minLogLevel.priority) return;
+		this._printLogObject(this._prepareLogObject(WARN, tag, message, error));
+	}
+
+	/**
+	 *
+	 * @param {string} tag
+	 * @param {string} message
+	 * @param {any} [error]
+	 */
+	e(tag, message, error) {
+		if(ERROR.priority < this._minLogLevel.priority) return;
+		this._printLogObject(this._prepareLogObject(ERROR, tag, message, error));
 	}
 
 }
 
-ConsoleLogger.Builder = class {
-
-	constructor() {
-		this._logSourceId = 'libloggerjs';
-		this._logSourceVersion = '2021.9.2';
-		this._logSourceMode = 'debug';
-		this._defaultLogTag = 'libloggerjs';
-		this._minLogLevel = LogLevel.VERBOSE;
-	}
+class ConsoleLoggerBuilder {
 
 	/**
 	 *
 	 * @param {string} sourceId
-	 * @return {ConsoleLogger.Builder}
+	 * @return {ConsoleLoggerBuilder}
 	 */
-	setLogSourceId(sourceId) {
-		if(typeof sourceId !== 'string')
-			throw new Error('logSourceId must be a string');
-		this._logSourceId = sourceId.toLowerCase();
-		return this;
-	}
-
-	/**
-	 *
-	 * @param {string} sourceVersion
-	 * @return {ConsoleLogger.Builder}
-	 */
-	setLogSourceVersion(sourceVersion) {
-		if(typeof sourceVersion !== 'string')
-			throw new Error('sourceVersion must be a string');
-		this._logSourceVersion = sourceVersion.toLowerCase();
+	setSourceId(sourceId) {
+		this._sourceId = sourceId;
 		return this;
 	}
 
 	/**
 	 *
 	 * @param {string} sourceMode
-	 * @return {ConsoleLogger.Builder}
+	 * @return {ConsoleLoggerBuilder}
 	 */
-	setLogSourceMode(sourceMode) {
-		if(typeof sourceMode !== 'string')
-			throw new Error('sourceMode must be a string');
-		this._logSourceMode = sourceMode.toLowerCase();
+	setSourceMode(sourceMode) {
+		this._sourceMode = sourceMode;
 		return this;
 	}
 
 	/**
 	 *
-	 * @param {string} logTag
-	 * @return {ConsoleLogger.Builder}
+	 * @param {string} sourceVersion
+	 * @return {ConsoleLoggerBuilder}
 	 */
-	setDefaultLogTag(logTag) {
-		if(typeof logTag !== 'string')
-			throw new Error('logTag must be a string');
-		this._defaultLogTag = logTag.toLowerCase();
+	setSourceVersion(sourceVersion) {
+		this._sourceVersion = sourceVersion;
 		return this;
 	}
 
 	/**
 	 *
-	 * @param {LogLevelModel} minLogLevel
-	 * @return {ConsoleLogger.Builder}
+	 * @param {LogLevel} minLogLevel
+	 * @return {ConsoleLoggerBuilder}
 	 */
 	setMinLogLevel(minLogLevel) {
-		if (!(minLogLevel instanceof LogLevelModel))
-			throw new Error('minLogLevel must be an instance of LogLevelModel');
 		this._minLogLevel = minLogLevel;
 		return this;
 	}
@@ -305,15 +192,30 @@ ConsoleLogger.Builder = class {
 	 * @return {ConsoleLogger}
 	 */
 	build() {
+
+		if(typeof this._sourceId !== 'string')
+			throw new Error('sourceId must be string');
+
+		if(typeof this._sourceMode !== 'string')
+			throw new Error('sourceMode must be string');
+
+		if(typeof this._sourceVersion !== 'string')
+			throw new Error('sourceVersion must be string');
+
+		if(!(this._minLogLevel instanceof LogLevel))
+			throw new Error('minLogLevel must be instance of LogLevel');
+
 		return new ConsoleLogger(
-			this._logSourceId,
-			this._logSourceVersion,
-			this._logSourceMode,
-			this._defaultLogTag,
+			this._sourceId,
+			this._sourceVersion,
+			this._sourceMode,
 			this._minLogLevel
 		);
+
 	}
 
-};
+}
 
-module.exports = ConsoleLogger;
+
+module.exports.ConsoleLoggerBuilder = ConsoleLoggerBuilder;
+module.exports.ConsoleLogger = ConsoleLogger;
